@@ -20,11 +20,24 @@ export default function AdminLoginPage() {
     handleResize();
     window.addEventListener("resize", handleResize);
     
-    // Check for existing session
+    // Check for existing session and verify event exists on server
     const sessionStr = localStorage.getItem("human_bingo_operator");
     if (sessionStr) {
       try {
-        setOperatorSession(JSON.parse(sessionStr));
+        const parsed = JSON.parse(sessionStr);
+        fetch(`/api/events/${parsed.eventCode}`)
+          .then((res) => {
+            if (res.ok) {
+              setOperatorSession(parsed);
+            } else if (res.status === 404) {
+              // Dead session from server restart/expiry — clear it
+              localStorage.removeItem("human_bingo_operator");
+              setOperatorSession(null);
+            }
+          })
+          .catch(() => {
+            setOperatorSession(parsed);
+          });
       } catch (e) {
         // ignore
       }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "../components/AdminSidebar";
+import { clearOperatorSession } from "../../lib/client-store";
 
 export default function AdminLaunchPage() {
   const router = useRouter();
@@ -31,9 +32,16 @@ export default function AdminLaunchPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ operatorSecret: operatorSession.operatorSecret })
     })
-      .then(res => res.json())
+      .then(async (res) => {
+        if (res.status === 404 || res.status === 401) {
+          clearOperatorSession();
+          router.push("/admin/login?reason=expired");
+          return null;
+        }
+        return res.json();
+      })
       .then(data => {
-        if (data.participants) {
+        if (data?.participants) {
           setJoinedList(data.participants);
         }
       })
@@ -64,7 +72,7 @@ export default function AdminLaunchPage() {
     };
 
     return () => es.close();
-  }, [operatorSession]);
+  }, [operatorSession, router]);
 
   const handleRemove = async (id: string) => {
     if (!operatorSession) return;
@@ -112,8 +120,15 @@ export default function AdminLaunchPage() {
       if (res.ok) {
         router.push("/admin/dashboard");
       } else {
-        alert("Failed to start event");
-        setIsStarting(false);
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 404 || res.status === 401) {
+          alert(`Event "${operatorSession.eventCode}" no longer exists on server. Creating a new event...`);
+          clearOperatorSession();
+          router.push("/admin/login");
+        } else {
+          alert(`Failed to start event: ${data.error || "Unknown error"}`);
+          setIsStarting(false);
+        }
       }
     } catch(err) {
       console.error(err);

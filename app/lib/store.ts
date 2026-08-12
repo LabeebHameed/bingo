@@ -71,10 +71,21 @@ export interface EventState {
   timerInterval?: NodeJS.Timeout | null;
 }
 
-// Singletons
-export const events = new Map<string, EventState>();
-// Map eventCode to Set of stream controllers
-export const sseClients = new Map<string, Set<ReadableStreamDefaultController>>();
+// Global singletons to ensure state persistence across Next.js App Router route handlers
+const globalForEvents = globalThis as unknown as {
+  __events_map__?: Map<string, EventState>;
+  __sse_clients_map__?: Map<string, Set<ReadableStreamDefaultController>>;
+};
+
+export const events = globalForEvents.__events_map__ || new Map<string, EventState>();
+if (!globalForEvents.__events_map__) {
+  globalForEvents.__events_map__ = events;
+}
+
+export const sseClients = globalForEvents.__sse_clients_map__ || new Map<string, Set<ReadableStreamDefaultController>>();
+if (!globalForEvents.__sse_clients_map__) {
+  globalForEvents.__sse_clients_map__ = sseClients;
+}
 
 export const generateEventCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
