@@ -216,17 +216,33 @@ export default function BingoGridPage() {
     try {
       let finalUrl = capturedPhotoUrl;
       
-      // If it's a new upload, send it
+      // Send image to upload-selfie API
       if (capturedBlob) {
-        const formData = new FormData();
-        formData.append("file", capturedBlob, "selfie.jpg");
-        const uploadRes = await fetch("/api/upload-selfie", {
-          method: "POST",
-          body: formData,
-        });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          finalUrl = uploadData.url;
+        try {
+          const formData = new FormData();
+          formData.append("image", capturedBlob, "selfie.jpg");
+          const uploadRes = await fetch("/api/upload-selfie", {
+            method: "POST",
+            body: formData,
+          });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            if (uploadData.url) {
+              finalUrl = uploadData.url;
+            }
+          }
+        } catch (e) {
+          console.error("Upload selfie error", e);
+        }
+
+        // Fallback: If upload-selfie returned no URL or finalUrl is still a blob: URL,
+        // convert capturedBlob to a portable Base64 Data URL so it works across all devices!
+        if (!finalUrl || finalUrl.startsWith("blob:")) {
+          finalUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(capturedBlob);
+          });
         }
       }
 
