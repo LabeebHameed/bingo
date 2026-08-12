@@ -6,7 +6,66 @@ import { useRouter } from "next/navigation";
 import { useGame } from "../context/GameContext";
 import { startCamera, stopCamera, captureFrame, checkCameraPermission } from "../utils/camera";
 import { compressImage } from "../utils/imageCompressor";
-import confetti from "canvas-confetti";
+function triggerConfetti() {
+  if (typeof window === "undefined") return;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.style.position = "fixed";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    canvas.style.pointerEvents = "none";
+    canvas.style.zIndex = "99999";
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles: { x: number; y: number; vx: number; vy: number; color: string; size: number; alpha: number }[] = [];
+    const colors = ["#ff0055", "#00e5ff", "#ffcc00", "#ff3399", "#00ff66"];
+
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        vx: (Math.random() - 0.5) * 12,
+        vy: (Math.random() - 0.7) * 14,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 8 + 4,
+        alpha: 1,
+      });
+    }
+
+    const startTime = Date.now();
+    function animate() {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > 2000) {
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        return;
+      }
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3;
+        p.alpha -= 0.015;
+        if (ctx) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+          ctx.restore();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  } catch (e) {}
+}
 
 interface Square {
   id: number;
@@ -199,7 +258,7 @@ export default function BingoGridPage() {
             s.id === activeSquare.id ? { ...s, completed: true, photoUrl: finalUrl || "" } : s
           );
           if (countCompletedLines(newSquares) > prevLines) {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            triggerConfetti();
           }
         }, 100);
 
