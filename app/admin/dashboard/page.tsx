@@ -104,11 +104,20 @@ export default function OperatorDashboardPage() {
   const handleControl = async (action: "pause" | "resume" | "end") => {
     if (!operatorSession) return;
     try {
-      await fetch(`/api/events/${operatorSession.eventCode}/control`, {
+      const res = await fetch(`/api/events/${operatorSession.eventCode}/control`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ operatorSecret: operatorSession.operatorSecret, action })
       });
+      if (res.ok) {
+        if (action === "end") {
+          setSecondsLeft(0);
+          setEndTimestamp(Date.now());
+          alert("🏁 Rally Event has been officially ended!");
+        }
+      } else {
+        alert("Failed to update game state");
+      }
     } catch(err) {
       console.error(err);
     }

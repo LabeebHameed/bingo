@@ -34,11 +34,14 @@ export async function POST(
       }
     } else if (action === 'end') {
       event.status = 'ended';
+      event.endTimestamp = Date.now();
       if (event.timerInterval) {
         clearInterval(event.timerInterval);
         event.timerInterval = null;
       }
-      broadcastToEvent(code, 'game_ended', { leaderboard: event.leaderboard });
+      broadcastToEvent(code, 'timer_tick', { remainingSeconds: 0, endTimestamp: event.endTimestamp, status: 'ended' });
+      broadcastToEvent(code, 'game_ended', { leaderboard: event.leaderboard, status: 'ended' });
+      broadcastToEvent(code, 'game_state', { status: 'ended' });
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
