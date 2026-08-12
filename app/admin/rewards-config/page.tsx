@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "../components/AdminSidebar";
@@ -11,6 +11,27 @@ export default function AdminRewardsConfigPage() {
   const [tier1Prize, setTier1Prize] = useState("Campus Store $50 Gift Card + VIP Rally Hoodie");
   const [tier2Prize, setTier2Prize] = useState("Official Rally Champion Tumbler + Dining Voucher");
   const [tier3Prize, setTier3Prize] = useState("Exclusive Digital Rally Finisher Badge");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("operator_rewards_config");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.tier1) setTier1Prize(parsed.tier1);
+        if (parsed.tier2) setTier2Prize(parsed.tier2);
+        if (parsed.tier3) setTier3Prize(parsed.tier3);
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleNext = () => {
+    localStorage.setItem("operator_rewards_config", JSON.stringify({
+      tier1: tier1Prize,
+      tier2: tier2Prize,
+      tier3: tier3Prize,
+    }));
+    router.push("/admin/launch");
+  };
 
   return (
     <div className="bg-surface text-on-surface font-body-md min-h-screen flex flex-col md:flex-row">
@@ -136,7 +157,7 @@ export default function AdminRewardsConfigPage() {
                 ← Back
               </Link>
               <button
-                onClick={() => router.push("/admin/launch")}
+                onClick={handleNext}
                 className="bg-primary text-on-primary font-headline-md text-headline-md uppercase px-8 py-4 border-4 border-on-surface pop-shadow hover:bg-primary-container transition-all flex items-center gap-2 cursor-pointer"
               >
                 Launch Lobby

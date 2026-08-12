@@ -67,6 +67,7 @@ export interface EventState {
   bingoCards: Map<string, BingoCard>;
   activityFeed: ActivityItem[];
   leaderboard: LeaderboardEntry[];
+  rewardTiers?: { tier1: string; tier2: string; tier3: string };
   timerInterval?: NodeJS.Timeout | null;
 }
 
@@ -112,7 +113,7 @@ export const DEFAULT_QUESTIONS = [
 export const broadcastToEvent = (eventCode: string, type: string, payload: any) => {
   const clients = sseClients.get(eventCode);
   if (!clients) return;
-  const message = `data: ${JSON.stringify({ type, payload })}\n\n`;
+  const message = `event: ${type}\ndata: ${JSON.stringify({ type, payload, ...payload })}\n\n`;
   for (const client of clients) {
     try {
       client.enqueue(new TextEncoder().encode(message));
@@ -234,13 +235,13 @@ export const startTimer = (event: EventState) => {
     if (!event.endTimestamp) return;
     
     const remaining = Math.max(0, Math.floor((event.endTimestamp - Date.now()) / 1000));
-    broadcastToEvent(event.code, 'timer_tick', { remainingSeconds: remaining });
+    broadcastToEvent(event.code, 'timer_tick', { remainingSeconds: remaining, endTimestamp: event.endTimestamp, status: event.status });
     
     if (remaining <= 0) {
       if (event.timerInterval) clearInterval(event.timerInterval);
       event.timerInterval = null;
       event.status = 'ended';
-      broadcastToEvent(event.code, 'game_ended', { leaderboard: event.leaderboard });
+      broadcastToEvent(event.code, 'game_ended', { leaderboard: event.leaderboard, status: 'ended' });
     }
   }, 1000);
 };

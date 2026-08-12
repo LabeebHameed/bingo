@@ -24,14 +24,44 @@ export default function AdminLaunchPage() {
 
   useEffect(() => {
     if (!operatorSession?.eventCode) return;
+
+    // Initial fetch of joined participants roster
+    fetch(`/api/events/${operatorSession.eventCode}/reconnect`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operatorSecret: operatorSession.operatorSecret })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.participants) {
+          setJoinedList(data.participants);
+        }
+      })
+      .catch(e => console.error(e));
+
     const es = new EventSource(`/api/sse/${operatorSession.eventCode}`);
+
+    const handleLobbyUpdate = (data: any) => {
+      if (data?.participants) {
+        setJoinedList(data.participants);
+      }
+    };
     
     es.addEventListener("lobby_update", (e) => {
       try {
         const data = JSON.parse(e.data);
-        setJoinedList(data.participants || []);
+        handleLobbyUpdate(data.payload || data);
       } catch(err) {}
     });
+
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "lobby_update") {
+          handleLobbyUpdate(data.payload || data);
+        }
+      } catch(err) {}
+    };
 
     return () => es.close();
   }, [operatorSession]);
@@ -47,7 +77,6 @@ export default function AdminLaunchPage() {
           participantId: id,
         }),
       });
-      // The SSE should push an updated roster automatically
     } catch(err) {
       console.error("Failed to remove participant", err);
     }
@@ -57,9 +86,10 @@ export default function AdminLaunchPage() {
     if (!operatorSession) return;
     setIsStarting(true);
     try {
-      // Load any config overrides from localStorage
+      // Load all config overrides from localStorage
       const configOverride = localStorage.getItem("operator_config");
       const gridOverride = localStorage.getItem("operator_grid_config");
+      const rewardsOverride = localStorage.getItem("operator_rewards_config");
       
       let payload = { operatorSecret: operatorSession.operatorSecret } as any;
       
@@ -68,6 +98,9 @@ export default function AdminLaunchPage() {
       }
       if (gridOverride) {
         payload.gridConfig = JSON.parse(gridOverride);
+      }
+      if (rewardsOverride) {
+        payload.rewardTiers = JSON.parse(rewardsOverride);
       }
 
       const res = await fetch(`/api/events/${operatorSession.eventCode}/start`, {

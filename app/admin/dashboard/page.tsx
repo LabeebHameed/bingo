@@ -26,47 +26,64 @@ export default function OperatorDashboardPage() {
 
   useEffect(() => {
     if (!operatorSession?.eventCode) return;
-    const es = new EventSource(`/api/sse/${operatorSession.eventCode}`);
-    
-    es.addEventListener("game_started", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.endTimestamp) setEndTimestamp(data.endTimestamp);
-      } catch(err) {}
-    });
-    
-    es.addEventListener("timer_tick", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.endTimestamp) setEndTimestamp(data.endTimestamp);
-      } catch(err) {}
-    });
 
-    es.addEventListener("leaderboard_update", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setLeaderboard(data.leaderboard || []);
-      } catch(err) {}
-    });
-
-    es.addEventListener("activity_feed", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        // Prepend new activity
-        setActivityFeed(prev => [data, ...prev].slice(0, 20));
-      } catch(err) {}
-    });
-    
-    // Also trigger a reconnect manually to fetch initial full state in case we missed events
+    // Initial fetch of full operator game state
     fetch(`/api/events/${operatorSession.eventCode}/reconnect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ operatorSecret: operatorSession.operatorSecret })
-    }).then(res => res.json()).then(data => {
-      if (data.endTimestamp) setEndTimestamp(data.endTimestamp);
-      if (data.leaderboard) setLeaderboard(data.leaderboard);
-      // activity logs aren't strictly returned in reconnect by default but we will get them over SSE
-    }).catch(() => {});
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.endTimestamp) setEndTimestamp(data.endTimestamp);
+        if (data.leaderboard) setLeaderboard(data.leaderboard);
+        if (data.activityFeed) setActivityFeed(data.activityFeed);
+        if (data.timer?.remainingSeconds !== undefined) setSecondsLeft(data.timer.remainingSeconds);
+      })
+      .catch(() => {});
+
+    const es = new EventSource(`/api/sse/${operatorSession.eventCode}`);
+
+    const handleSSEMessage = (type: string, data: any) => {
+      const payload = data.payload || data;
+      if (type === "game_started" || type === "timer_tick") {
+        if (payload.endTimestamp) setEndTimestamp(payload.endTimestamp);
+        if (payload.remainingSeconds !== undefined) setSecondsLeft(payload.remainingSeconds);
+      }
+      if (type === "leaderboard_update") {
+        if (payload.leaderboard) setLeaderboard(payload.leaderboard);
+      }
+      if (type === "activity_feed") {
+        if (payload.activity) {
+          setActivityFeed((prev) => [payload.activity, ...prev].slice(0, 30));
+        } else if (payload.message) {
+          setActivityFeed((prev) => [payload, ...prev].slice(0, 30));
+        }
+      }
+    };
+
+    es.addEventListener("game_started", (e) => {
+      try { handleSSEMessage("game_started", JSON.parse(e.data)); } catch (err) {}
+    });
+
+    es.addEventListener("timer_tick", (e) => {
+      try { handleSSEMessage("timer_tick", JSON.parse(e.data)); } catch (err) {}
+    });
+
+    es.addEventListener("leaderboard_update", (e) => {
+      try { handleSSEMessage("leaderboard_update", JSON.parse(e.data)); } catch (err) {}
+    });
+
+    es.addEventListener("activity_feed", (e) => {
+      try { handleSSEMessage("activity_feed", JSON.parse(e.data)); } catch (err) {}
+    });
+
+    es.onmessage = (e) => {
+      try {
+        const parsed = JSON.parse(e.data);
+        if (parsed.type) handleSSEMessage(parsed.type, parsed);
+      } catch (err) {}
+    };
 
     return () => es.close();
   }, [operatorSession]);
