@@ -10,10 +10,13 @@ function SetupFormContent() {
   const searchParams = useSearchParams();
   const isReadOnly = searchParams.get("mode") === "readonly";
 
-  const [rallyTitle, setRallyTitle] = useState("Fall 2026 Campus Welcome Rally");
+  const [rallyTitle, setRallyTitle] = useState("Campus Rally 2026");
   const [capacity, setCapacity] = useState(250);
   const [duration, setDuration] = useState(45);
   const [playMode, setPlayMode] = useState<"solo" | "squad">("solo");
+  const [rewardTier1, setRewardTier1] = useState("Campus Store $50 Gift Card + VIP Rally Hoodie");
+  const [rewardTier2, setRewardTier2] = useState("Official Rally Champion Tumbler + Dining Voucher");
+  const [rewardTier3, setRewardTier3] = useState("Exclusive Digital Rally Finisher Badge");
   const [operatorSession, setOperatorSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +27,28 @@ function SetupFormContent() {
       setOperatorSession(parsed);
       if (parsed.title) setRallyTitle(parsed.title);
     }
+
+    const config = localStorage.getItem("operator_config");
+    if (config) {
+      try {
+        const parsedConfig = JSON.parse(config);
+        if (parsedConfig.title) setRallyTitle(parsedConfig.title);
+        if (parsedConfig.capacity) setCapacity(parsedConfig.capacity);
+        if (parsedConfig.durationMinutes) setDuration(parsedConfig.durationMinutes);
+        if (parsedConfig.playMode) setPlayMode(parsedConfig.playMode);
+      } catch (e) {}
+    }
+
+    const rewards = localStorage.getItem("operator_rewards_config");
+    if (rewards) {
+      try {
+        const parsedRewards = JSON.parse(rewards);
+        if (parsedRewards.tier1) setRewardTier1(parsedRewards.tier1);
+        if (parsedRewards.tier2) setRewardTier2(parsedRewards.tier2);
+        if (parsedRewards.tier3) setRewardTier3(parsedRewards.tier3);
+      } catch (e) {}
+    }
+
     setLoading(false);
   }, []);
 
@@ -145,11 +170,16 @@ function SetupFormContent() {
                   <div>
                     <span className="font-label-bold text-xs uppercase text-secondary">Reward Tiers:</span>
                     <span className="font-body-md text-sm block font-bold text-on-surface">
-                      Tier 1: Grand Champion ($50 Gift Card)
+                      Tier 1: {rewardTier1}
                     </span>
                     <span className="font-body-md text-sm block text-on-surface-variant">
-                      Tier 2: 5-in-a-Row Winner (Tumbler + Voucher)
+                      Tier 2: {rewardTier2}
                     </span>
+                    {rewardTier3 && (
+                      <span className="font-body-md text-xs block text-on-surface-variant opacity-80">
+                        Tier 3: {rewardTier3}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -295,7 +325,7 @@ function SetupFormContent() {
               {/* Bottom Action Bar */}
               <div className="flex justify-between items-center pt-6 pb-8">
                 <Link
-                  href="/"
+                  href="/admin/dashboard"
                   className="bg-surface border-4 border-on-surface px-6 py-4 font-label-bold text-label-bold uppercase pop-shadow hover:bg-surface-variant"
                 >
                   Cancel

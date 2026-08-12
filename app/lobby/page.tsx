@@ -35,6 +35,29 @@ function LobbyContent() {
     }
   }, [session, gameEvent, router]);
 
+  // Polling fallback to guarantee instant transition when host starts game
+  useEffect(() => {
+    if (!session?.eventCode) return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/events/${session.eventCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "active" || data.status === "paused") {
+            router.push("/bingo");
+          } else if (data.status === "ended") {
+            router.push("/rewards");
+          }
+        }
+      } catch (e) {}
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 2000);
+    return () => clearInterval(interval);
+  }, [session, router]);
+
   const handleEnterGame = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gameCode) return;

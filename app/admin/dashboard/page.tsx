@@ -189,25 +189,28 @@ export default function OperatorDashboardPage() {
                   {activityFeed.length === 0 ? (
                     <p className="text-on-surface-variant p-4 italic">No activity yet. Game starting soon...</p>
                   ) : (
-                    activityFeed.map((act, i) => (
-                      <div key={i} className={`flex items-start gap-4 p-4 border-4 border-on-surface pop-shadow ${act.type === 'system' ? 'bg-primary text-on-primary' : 'bg-surface-bright text-on-surface'}`}>
-                        <div className={`w-12 h-12 flex items-center justify-center font-headline-md text-headline-md border-2 border-on-surface flex-shrink-0 ${act.type === 'system' ? 'bg-on-primary text-primary' : 'bg-tertiary text-on-tertiary'}`}>
-                          {act.type === 'system' ? '!' : (act.playerName?.[0]?.toUpperCase() || 'P')}
+                    activityFeed.map((act, i) => {
+                      const name = act.participantName || act.playerName || act.name || "Player";
+                      const letter = (name[0] || "P").toUpperCase();
+                      const messageText = act.message || `${name} completed "${act.targetName || act.squareLabel || 'Square'}"!`;
+                      const isSystem = act.type === "system";
+
+                      return (
+                        <div key={i} className={`flex items-start gap-4 p-4 border-4 border-on-surface pop-shadow ${isSystem ? 'bg-primary text-on-primary' : 'bg-surface-bright text-on-surface'}`}>
+                          <div className={`w-12 h-12 flex items-center justify-center font-headline-md text-headline-md border-2 border-on-surface flex-shrink-0 ${isSystem ? 'bg-on-primary text-primary' : 'bg-tertiary text-on-tertiary'}`}>
+                            {isSystem ? '!' : letter}
+                          </div>
+                          <div className="flex-grow">
+                            <p className={`font-label-bold text-label-bold uppercase tracking-widest mb-1 ${isSystem ? 'text-on-primary-container' : 'text-on-surface-variant'}`}>
+                              {new Date(act.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {isSystem ? 'System' : 'Game'}
+                            </p>
+                            <p className={`font-body-lg text-body-lg ${isSystem ? 'text-on-primary' : 'text-on-surface'}`}>
+                              {messageText}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-grow">
-                          <p className={`font-label-bold text-label-bold uppercase tracking-widest mb-1 ${act.type === 'system' ? 'text-on-primary-container' : 'text-on-surface-variant'}`}>
-                            {new Date(act.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {act.type === 'system' ? 'System' : 'Game'}
-                          </p>
-                          <p className={`font-body-lg text-body-lg ${act.type === 'system' ? 'text-on-primary' : 'text-on-surface'}`}>
-                            {act.type === 'system' ? (
-                              act.message
-                            ) : (
-                              <><span className="font-bold">{act.playerName}</span> claimed "{act.squareLabel}"</>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </section>
@@ -270,8 +273,13 @@ export default function OperatorDashboardPage() {
                   ) : (
                     leaderboard.slice(0, 10).map((p, idx) => (
                       <div key={p.id || idx} className={`flex items-center justify-between p-3 border-2 border-on-surface pop-shadow ${idx === 0 ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-surface-container'}`}>
-                        <span className={`font-headline-md text-headline-md ${idx === 0 ? 'text-on-tertiary-fixed' : ''}`}>#{idx + 1} {p.name}</span>
-                        <span className="font-bold text-sm bg-surface text-on-surface px-2 py-0.5 border border-on-surface">{p.score || 0}/25</span>
+                        <div className="flex flex-col">
+                          <span className={`font-headline-md text-headline-md ${idx === 0 ? 'text-on-tertiary-fixed' : ''}`}>#{idx + 1} {p.nickname || p.name}</span>
+                          <span className="text-[10px] font-label-bold uppercase opacity-75">{p.completedSquares || 0}/25 STAMPED</span>
+                        </div>
+                        <span className="font-bold text-sm bg-surface text-on-surface px-2 py-1 border border-on-surface pop-shadow-sm" title="5-in-a-row BINGO lines">
+                          {p.completedLines || 0}/5 LINES
+                        </span>
                       </div>
                     ))
                   )}
