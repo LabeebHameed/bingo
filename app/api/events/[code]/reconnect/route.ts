@@ -23,6 +23,16 @@ export async function POST(
       if (event.status === 'active' && event.endTimestamp) {
         remainingSeconds = Math.max(0, Math.floor((event.endTimestamp - Date.now()) / 1000));
       }
+
+      const bingoCardsList = Array.from(event.participants.values()).map(p => ({
+        participantId: p.id,
+        participantName: p.name,
+        nickname: p.nickname,
+        badge: p.badge,
+        joinedAt: p.joinedAt,
+        card: event.bingoCards.get(p.id) || null
+      }));
+
       return NextResponse.json({
         event: {
           title: event.title,
@@ -34,6 +44,7 @@ export async function POST(
         leaderboard: event.leaderboard,
         activityFeed: event.activityFeed,
         rewardTiers: event.rewardTiers,
+        bingoCards: bingoCardsList,
         endTimestamp: event.endTimestamp,
         timer: {
           remainingSeconds,

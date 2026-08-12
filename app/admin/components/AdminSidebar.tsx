@@ -9,7 +9,8 @@ export type AdminSidebarActiveKey =
   | "rewards"
   | "launch"
   | "feed"
-  | "qr";
+  | "qr"
+  | "tasks";
 
 interface AdminSidebarProps {
   mode: "wizard" | "operator";
@@ -65,16 +66,16 @@ export default function AdminSidebar({
     );
   }
 
-  // Operator Dashboard Mode Sidebar (Post-Setup / Projector Mode)
+  // Operator Mode Sidebar
   return (
     <nav className="hidden md:flex flex-col h-screen sticky top-0 p-gutter bg-surface-container w-80 border-r-4 border-on-surface shadow-[4px_0px_0px_0px_rgba(0,0,0,1)] z-40">
       <div className="mb-stack-lg border-b-4 border-on-surface pb-4">
-        <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tighter leading-tight">
-          OPERATOR DASHBOARD
+        <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tighter">
+          OPERATOR CONTROL
         </h1>
-        <p className="font-label-bold text-label-bold text-secondary uppercase tracking-widest mt-1">
-          PROJECTOR MODE
-        </p>
+        <span className="font-label-bold text-xs uppercase text-secondary">
+          LIVE RALLY DASHBOARD
+        </span>
       </div>
 
       <ul className="flex flex-col gap-stack-sm flex-grow">
@@ -136,6 +137,21 @@ export default function AdminSidebar({
               <span>QR Code Display</span>
             </Link>
           )}
+        </li>
+
+        {/* 3. Verify Cards & Selfies */}
+        <li>
+          <Link
+            href="/admin/task-details"
+            className={`flex items-center gap-4 px-4 py-3 font-label-bold text-label-bold uppercase border-2 transition-all ${
+              activeKey === "tasks"
+                ? "bg-tertiary-fixed text-on-tertiary-fixed font-bold border-on-surface shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                : "text-on-surface border-transparent hover:bg-surface-variant hover:border-on-surface hover:translate-x-1"
+            }`}
+          >
+            <span className="material-symbols-outlined">fact_check</span>
+            <span>Verify Cards & Selfies</span>
+          </Link>
         </li>
 
         {/* 3. Game Setup (Opens Read-Only Preview First) */}
