@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ac001e;
+  --color-primary-container: #d90429;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffeae8;
+  --color-primary-fixed: #ffdad7;
+  --color-primary-fixed-dim: #ffb3af;
+
+  --color-secondary: #5b5d74;
+  --color-secondary-container: #ddddf9;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #5f6178;
+
+  --color-tertiary: #6f4d00;
+  --color-tertiary-container: #8e6400;
+  --color-tertiary-fixed: #ffdea9;
+  --color-tertiary-fixed-dim: #ffba2c;
+  --color-on-tertiary-fixed: #271900;
+  --color-on-tertiary-container: #ffebcf;
+
+  --color-surface: #f9f9f9;
+  --color-surface-dim: #dadada;
+  --color-surface-bright: #f9f9f9;
+  --color-surface-variant: #e2e2e2;
+  --color-surface-container: #eeeeee;
+  --color-surface-container-low: #f3f3f4;
+  --color-surface-container-high: #e8e8e8;
+  --color-surface-container-highest: #e2e2e2;
+  --color-surface-container-lowest: #ffffff;
+
+  --color-background: #f9f9f9;
+  --color-on-background: #1a1c1c;
+  --color-on-surface: #1a1c1c;
+  --color-on-surface-variant: #5d3f3d;
+  --color-inverse-surface: #2f3131;
+  --color-inverse-on-surface: #f0f1f1;
+
+  --color-outline: #926e6c;
+  --color-outline-variant: #e7bcba;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --font-anton: 'Anton', sans-serif;
+  --font-archivo: 'Archivo Narrow', sans-serif;
+
+  --spacing-base: 8px;
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-lg: 48px;
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 48px;
+}
+
+/* Material Symbols Outlined Icon Font */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Exact Stitch Typography Classes */
+.font-display-lg, .text-display-lg {
+  font-family: 'Anton', sans-serif;
+  font-size: 72px !important;
+  line-height: 72px !important;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.font-display-lg-mobile, .text-display-lg-mobile {
+  font-family: 'Anton', sans-serif;
+  font-size: 48px !important;
+  line-height: 48px !important;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.font-headline-lg, .text-headline-lg {
+  font-family: 'Anton', sans-serif;
+  font-size: 40px !important;
+  line-height: 44px !important;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.font-headline-md, .text-headline-md {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px !important;
+  line-height: 36px !important;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.font-body-lg, .text-body-lg {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 20px !important;
+  line-height: 28px !important;
+  font-weight: 500;
+}
+
+.font-body-md, .text-body-md {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 16px !important;
+  line-height: 24px !important;
+  font-weight: 400;
+}
+
+.font-label-bold, .text-label-bold {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 14px !important;
+  line-height: 16px !important;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Neo-Brutalist Pop Shadows from Stitch */
+.pop-shadow {
+  box-shadow: 4px 4px 0px 0px rgba(26, 28, 28, 1);
+}
+
+.pop-shadow-lg {
+  box-shadow: 8px 8px 0px 0px rgba(26, 28, 28, 1);
+}
+
+.pop-shadow-sm {
+  box-shadow: 2px 2px 0px 0px rgba(26, 28, 28, 1);
+}
+
+.pop-shadow-active:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px rgba(26, 28, 28, 1);
+}
+
+.input-focus:focus-within, .input-focus:focus {
+  border-color: #2f3131;
+  box-shadow: 4px 4px 0px 0px #ffba2c;
+}
