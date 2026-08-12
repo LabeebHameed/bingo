@@ -255,11 +255,13 @@ export default function OperatorDashboardPage() {
                       const isFiveOfFive = (p.completedLines || 0) >= 5 || (p.completedSquares || 0) >= 25;
                       return (
                         <div key={p.id || idx} className={`flex items-center justify-between p-3 border-2 border-on-surface pop-shadow ${isFiveOfFive ? 'bg-green-600 text-white font-bold border-green-950' : idx === 0 ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-surface-container'}`}>
-                          <div className="flex flex-col">
-                            <span className={`font-headline-md text-headline-md ${isFiveOfFive ? 'text-white' : idx === 0 ? 'text-on-tertiary-fixed' : ''}`}>#{idx + 1} {p.nickname || p.name}</span>
+                          <div className="flex flex-col min-w-0 flex-1 pr-2">
+                            <span className={`font-headline-md text-headline-md truncate max-w-[130px] md:max-w-[150px] ${isFiveOfFive ? 'text-white' : idx === 0 ? 'text-on-tertiary-fixed' : ''}`} title={p.nickname || p.name}>
+                              #{idx + 1} {p.nickname || p.name}
+                            </span>
                             <span className={`text-[10px] font-label-bold uppercase ${isFiveOfFive ? 'text-green-100' : 'opacity-75'}`}>{p.completedSquares || 0}/25 STAMPED</span>
                           </div>
-                          <span className={`font-bold text-sm px-2.5 py-1 border-2 border-on-surface pop-shadow-sm ${isFiveOfFive ? 'bg-green-400 text-green-950 animate-bounce font-black' : 'bg-surface text-on-surface'}`} title="5-in-a-row BINGO lines">
+                          <span className={`font-bold text-sm px-2.5 py-1 border-2 border-on-surface pop-shadow-sm flex-shrink-0 ${isFiveOfFive ? 'bg-green-400 text-green-950 animate-bounce font-black' : 'bg-surface text-on-surface'}`} title="5-in-a-row BINGO lines">
                             {isFiveOfFive ? '🏆 5/5 BINGO!' : `${p.completedLines || 0}/5 LINES`}
                           </span>
                         </div>

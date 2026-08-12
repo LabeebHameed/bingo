@@ -91,6 +91,11 @@ function LobbyContent() {
       setSession(sessionData);
       
       sessionStorage.removeItem("temp_join_code");
+
+      // If joining late while game is already active or paused, enter game immediately
+      if (data.eventStatus === "active" || data.eventStatus === "paused") {
+        window.location.href = "/bingo";
+      }
     } catch (err: any) {
       setError(err.message);
       setIsJoining(false);
