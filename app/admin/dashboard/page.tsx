@@ -37,7 +37,7 @@ export default function OperatorDashboardPage() {
       .then((data) => {
         if (data.endTimestamp) setEndTimestamp(data.endTimestamp);
         if (data.leaderboard) setLeaderboard(data.leaderboard);
-        if (data.activityFeed) setActivityFeed(data.activityFeed);
+        if (data.activityFeed) setActivityFeed(data.activityFeed.slice(0, 8));
         if (data.timer?.remainingSeconds !== undefined) setSecondsLeft(data.timer.remainingSeconds);
       })
       .catch(() => {});
@@ -55,9 +55,9 @@ export default function OperatorDashboardPage() {
       }
       if (type === "activity_feed") {
         if (payload.activity) {
-          setActivityFeed((prev) => [payload.activity, ...prev].slice(0, 30));
+          setActivityFeed((prev) => [payload.activity, ...prev].slice(0, 8));
         } else if (payload.message) {
-          setActivityFeed((prev) => [payload, ...prev].slice(0, 30));
+          setActivityFeed((prev) => [payload, ...prev].slice(0, 8));
         }
       }
     };
@@ -101,7 +101,7 @@ export default function OperatorDashboardPage() {
     return () => clearInterval(timer);
   }, [endTimestamp]);
 
-  const handleControl = async (action: string) => {
+  const handleControl = async (action: "pause" | "resume" | "end") => {
     if (!operatorSession) return;
     try {
       await fetch(`/api/events/${operatorSession.eventCode}/control`, {
@@ -143,16 +143,13 @@ export default function OperatorDashboardPage() {
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col md:flex-row font-body-md overflow-x-hidden">
-      {/* Reusable Shared Admin Sidebar Component */}
       <AdminSidebar
         mode="operator"
         activeKey={activeTab === "feed" ? "feed" : activeTab === "qr" ? "qr" : "setup"}
         onTabSelect={(tab) => setActiveTab(tab)}
       />
 
-      {/* Main Display Area */}
       <div className="flex-1 flex flex-col min-h-screen p-margin-mobile md:p-margin-desktop overflow-y-auto">
-        {/* Standardized Header Section matching all other Admin Pages */}
         <div className="flex items-end justify-between border-b-4 border-on-surface pb-stack-sm mb-stack-lg">
           <div>
             <span className="inline-block px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed border-2 border-on-surface font-label-bold text-label-bold uppercase mb-2 pop-shadow transform -rotate-2">
@@ -180,12 +177,12 @@ export default function OperatorDashboardPage() {
         <main className="flex-grow flex flex-col">
           {activeTab === "feed" && (
             <div className="flex-grow flex flex-col xl:flex-row gap-gutter h-full min-h-[600px]">
-              {/* Left Column: Activity Feed */}
-              <section className="flex-1 flex flex-col border-4 border-on-surface bg-surface-lowest pop-shadow-lg p-6">
-                <div className="border-b-4 border-on-surface pb-4 mb-6">
+              <section className="flex-1 flex flex-col border-4 border-on-surface bg-surface-lowest pop-shadow-lg p-6 max-h-[640px]">
+                <div className="border-b-4 border-on-surface pb-4 mb-4 flex justify-between items-center">
                   <h2 className="font-headline-lg text-headline-lg uppercase text-primary">LATEST MOVES</h2>
+                  <span className="font-label-bold text-xs uppercase bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 border border-on-surface">MAX 8 RECENT</span>
                 </div>
-                <div className="flex-grow overflow-y-auto space-y-4 pr-2">
+                <div className="flex-grow overflow-y-auto space-y-3 pr-2 max-h-[500px]">
                   {activityFeed.length === 0 ? (
                     <p className="text-on-surface-variant p-4 italic">No activity yet. Game starting soon...</p>
                   ) : (
@@ -196,15 +193,15 @@ export default function OperatorDashboardPage() {
                       const isSystem = act.type === "system";
 
                       return (
-                        <div key={i} className={`flex items-start gap-4 p-4 border-4 border-on-surface pop-shadow ${isSystem ? 'bg-primary text-on-primary' : 'bg-surface-bright text-on-surface'}`}>
-                          <div className={`w-12 h-12 flex items-center justify-center font-headline-md text-headline-md border-2 border-on-surface flex-shrink-0 ${isSystem ? 'bg-on-primary text-primary' : 'bg-tertiary text-on-tertiary'}`}>
+                        <div key={i} className={`flex items-start gap-4 p-3 border-4 border-on-surface pop-shadow ${isSystem ? 'bg-primary text-on-primary' : 'bg-surface-bright text-on-surface'}`}>
+                          <div className={`w-10 h-10 flex items-center justify-center font-headline-md text-headline-md border-2 border-on-surface flex-shrink-0 ${isSystem ? 'bg-on-primary text-primary' : 'bg-tertiary text-on-tertiary'}`}>
                             {isSystem ? '!' : letter}
                           </div>
                           <div className="flex-grow">
-                            <p className={`font-label-bold text-label-bold uppercase tracking-widest mb-1 ${isSystem ? 'text-on-primary-container' : 'text-on-surface-variant'}`}>
+                            <p className={`font-label-bold text-xs uppercase tracking-widest mb-0.5 ${isSystem ? 'text-on-primary-container' : 'text-on-surface-variant'}`}>
                               {new Date(act.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {isSystem ? 'System' : 'Game'}
                             </p>
-                            <p className={`font-body-lg text-body-lg ${isSystem ? 'text-on-primary' : 'text-on-surface'}`}>
+                            <p className={`font-body-md text-sm ${isSystem ? 'text-on-primary' : 'text-on-surface'}`}>
                               {messageText}
                             </p>
                           </div>
@@ -215,7 +212,6 @@ export default function OperatorDashboardPage() {
                 </div>
               </section>
 
-              {/* Middle Column: Giant Countdown Timer */}
               <section className="w-full xl:w-96 flex flex-col border-4 border-on-surface bg-surface-lowest pop-shadow-lg p-6 justify-between items-center text-center">
                 <div className="w-full border-b-4 border-on-surface pb-4 mb-6">
                   <h2 className="font-headline-lg text-headline-lg uppercase text-secondary">TIME REMAINING</h2>
@@ -230,65 +226,42 @@ export default function OperatorDashboardPage() {
                 </div>
                 <div className="w-full pt-6 border-t-4 border-on-surface flex flex-col gap-2">
                   <div className="grid grid-cols-2 gap-2 w-full">
-                    <button
-                      onClick={() => handleControl('pause')}
-                      className="bg-surface text-on-surface border-4 border-on-surface pop-shadow-sm hover:bg-surface-variant font-label-bold uppercase py-3"
-                    >
-                      PAUSE
-                    </button>
-                    <button
-                      onClick={() => handleControl('resume')}
-                      className="bg-primary text-on-primary border-4 border-on-surface pop-shadow-sm hover:bg-primary-container font-label-bold uppercase py-3"
-                    >
-                      RESUME
-                    </button>
+                    <button onClick={() => handleControl('pause')} className="bg-surface text-on-surface border-4 border-on-surface pop-shadow-sm hover:bg-surface-variant font-label-bold uppercase py-3">PAUSE</button>
+                    <button onClick={() => handleControl('resume')} className="bg-primary text-on-primary border-4 border-on-surface pop-shadow-sm hover:bg-primary-container font-label-bold uppercase py-3">RESUME</button>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to end the game?")) {
-                        handleControl('end');
-                      }
-                    }}
-                    className="w-full bg-secondary text-on-secondary font-headline-md text-headline-md uppercase py-4 border-4 border-on-surface pop-shadow hover:bg-secondary-container transition-all cursor-pointer mt-2"
-                  >
-                    END GAME
-                  </button>
-                  <button
-                    onClick={handleExport}
-                    className="w-full bg-tertiary text-on-tertiary font-headline-md text-headline-md uppercase py-4 border-4 border-on-surface pop-shadow hover:bg-tertiary-container transition-all cursor-pointer mt-2"
-                  >
-                    EXPORT CSV
-                  </button>
+                  <button onClick={() => { if (window.confirm("End game?")) handleControl('end'); }} className="w-full bg-secondary text-on-secondary font-headline-md text-headline-md uppercase py-4 border-4 border-on-surface pop-shadow hover:bg-secondary-container transition-all cursor-pointer mt-2">END GAME</button>
+                  <button onClick={handleExport} className="w-full bg-tertiary text-on-tertiary font-headline-md text-headline-md uppercase py-4 border-4 border-on-surface pop-shadow hover:bg-tertiary-container transition-all cursor-pointer mt-2">EXPORT CSV</button>
                 </div>
               </section>
 
-              {/* Right Column: Live Leaderboard */}
-              <section className="w-full xl:w-80 flex flex-col border-4 border-on-surface bg-surface-lowest pop-shadow-lg p-6">
+              <section className="w-full xl:w-80 flex flex-col border-4 border-on-surface bg-surface-lowest pop-shadow-lg p-6 max-h-[640px]">
                 <div className="border-b-4 border-on-surface pb-4 mb-6">
                   <h2 className="font-headline-lg text-headline-lg uppercase text-tertiary">LEADERBOARD</h2>
                 </div>
-                <div className="space-y-4 flex-grow overflow-y-auto">
+                <div className="space-y-3 flex-grow overflow-y-auto pr-1">
                   {leaderboard.length === 0 ? (
                     <p className="text-on-surface-variant italic p-2">No players on the board yet.</p>
                   ) : (
-                    leaderboard.slice(0, 10).map((p, idx) => (
-                      <div key={p.id || idx} className={`flex items-center justify-between p-3 border-2 border-on-surface pop-shadow ${idx === 0 ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-surface-container'}`}>
-                        <div className="flex flex-col">
-                          <span className={`font-headline-md text-headline-md ${idx === 0 ? 'text-on-tertiary-fixed' : ''}`}>#{idx + 1} {p.nickname || p.name}</span>
-                          <span className="text-[10px] font-label-bold uppercase opacity-75">{p.completedSquares || 0}/25 STAMPED</span>
+                    leaderboard.slice(0, 10).map((p, idx) => {
+                      const isFiveOfFive = (p.completedLines || 0) >= 5 || (p.completedSquares || 0) >= 25;
+                      return (
+                        <div key={p.id || idx} className={`flex items-center justify-between p-3 border-2 border-on-surface pop-shadow ${isFiveOfFive ? 'bg-green-600 text-white font-bold border-green-950' : idx === 0 ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-surface-container'}`}>
+                          <div className="flex flex-col">
+                            <span className={`font-headline-md text-headline-md ${isFiveOfFive ? 'text-white' : idx === 0 ? 'text-on-tertiary-fixed' : ''}`}>#{idx + 1} {p.nickname || p.name}</span>
+                            <span className={`text-[10px] font-label-bold uppercase ${isFiveOfFive ? 'text-green-100' : 'opacity-75'}`}>{p.completedSquares || 0}/25 STAMPED</span>
+                          </div>
+                          <span className={`font-bold text-sm px-2.5 py-1 border-2 border-on-surface pop-shadow-sm ${isFiveOfFive ? 'bg-green-400 text-green-950 animate-bounce font-black' : 'bg-surface text-on-surface'}`} title="5-in-a-row BINGO lines">
+                            {isFiveOfFive ? '🏆 5/5 BINGO!' : `${p.completedLines || 0}/5 LINES`}
+                          </span>
                         </div>
-                        <span className="font-bold text-sm bg-surface text-on-surface px-2 py-1 border border-on-surface pop-shadow-sm" title="5-in-a-row BINGO lines">
-                          {p.completedLines || 0}/5 LINES
-                        </span>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </section>
             </div>
           )}
 
-          {/* QR Code Tab View */}
           {activeTab === "qr" && (
             <div className="flex-grow flex flex-col items-center justify-center border-4 border-on-surface bg-surface p-8 pop-shadow-lg text-center max-w-2xl mx-auto my-auto">
               <span className="bg-tertiary-fixed text-on-tertiary-fixed border-2 border-on-surface px-4 py-1 font-label-bold text-sm uppercase mb-4 pop-shadow">

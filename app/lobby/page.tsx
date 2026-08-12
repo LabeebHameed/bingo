@@ -29,11 +29,11 @@ function LobbyContent() {
 
   useEffect(() => {
     if (session && (gameEvent?.status === "active" || gameEvent?.status === "paused")) {
-      router.push("/bingo");
+      window.location.href = "/bingo";
     } else if (session && gameEvent?.status === "ended") {
-      router.push("/rewards");
+      window.location.href = "/rewards";
     }
-  }, [session, gameEvent, router]);
+  }, [session, gameEvent]);
 
   // Polling fallback to guarantee instant transition when host starts game
   useEffect(() => {
@@ -45,18 +45,18 @@ function LobbyContent() {
         if (res.ok) {
           const data = await res.json();
           if (data.status === "active" || data.status === "paused") {
-            router.push("/bingo");
+            window.location.href = "/bingo";
           } else if (data.status === "ended") {
-            router.push("/rewards");
+            window.location.href = "/rewards";
           }
         }
       } catch (e) {}
     };
 
     checkStatus();
-    const interval = setInterval(checkStatus, 2000);
+    const interval = setInterval(checkStatus, 1500);
     return () => clearInterval(interval);
-  }, [session, router]);
+  }, [session]);
 
   const handleEnterGame = async (e: React.FormEvent) => {
     e.preventDefault();

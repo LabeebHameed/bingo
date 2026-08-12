@@ -30,18 +30,18 @@ export default function LeaderboardPage() {
           const res = await fetch(`/api/events/${parsedSession.eventCode}/reconnect`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionToken: parsedSession.sessionToken }),
+            body: JSON.stringify({
+              participantId: parsedSession.participantId,
+              sessionToken: parsedSession.sessionToken,
+            }),
           });
           if (res.ok) {
             const data = await res.json();
             if (data.leaderboard) {
               setLeaderboard(data.leaderboard);
             }
-            if (data.state === "ENDED") {
+            if (data.timer?.status === "ended") {
               setGameEnded(true);
-            }
-            if (data.startedAt) {
-              setGameStartedAt(data.startedAt);
             }
           }
         } catch (error) {
@@ -53,27 +53,29 @@ export default function LeaderboardPage() {
 
       // Set up SSE
       const evtSource = new EventSource(`/api/sse/${parsedSession.eventCode}`);
+
+      const handleUpdate = (data: any) => {
+        const board = data.leaderboard || data.payload?.leaderboard;
+        if (board) setLeaderboard(board);
+      };
       
       evtSource.addEventListener("leaderboard_update", (e) => {
         try {
-          const data = JSON.parse(e.data);
-          setLeaderboard(data.leaderboard);
-        } catch (err) {
-          console.error("Error parsing leaderboard update", err);
-        }
+          handleUpdate(JSON.parse(e.data));
+        } catch (err) {}
       });
+
+      evtSource.onmessage = (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed.type === "leaderboard_update") {
+            handleUpdate(parsed);
+          }
+        } catch(err) {}
+      };
 
       evtSource.addEventListener("game_ended", () => {
         setGameEnded(true);
-      });
-
-      evtSource.addEventListener("game_started", (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          setGameStartedAt(data.startedAt);
-        } catch (err) {
-          console.error("Error parsing game started", err);
-        }
       });
 
       return () => {
@@ -193,25 +195,42 @@ export default function LeaderboardPage() {
           <div className="flex flex-col gap-2">
             {others.map((player) => {
               const isMe = session?.participantId === player.participantId;
+              const isFiveOfFive = (player.completedLines || 0) >= 5 || (player.completedSquares || 0) >= 25;
+
               return (
                 <div
                   key={player.participantId}
-                  className={`bg-surface-container-lowest border-2 p-3 flex justify-between items-center pop-shadow-sm ${isMe ? 'border-primary ring-2 ring-primary' : 'border-on-surface'}`}
+                  className={`border-4 p-3 flex justify-between items-center pop-shadow ${
+                    isFiveOfFive
+                      ? 'bg-green-600 text-white border-green-950 font-bold'
+                      : isMe
+                        ? 'bg-surface-bright border-primary ring-4 ring-primary'
+                        : 'bg-surface-container-lowest border-on-surface'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-headline-md text-xl w-8 text-center text-primary">#{player.rank}</span>
+                    <span className={`font-headline-md text-xl w-8 text-center ${isFiveOfFive ? 'text-white font-black' : 'text-primary'}`}>
+                      #{player.rank}
+                    </span>
                     <div>
-                      <h4 className="font-headline-md text-sm uppercase text-on-surface flex items-center gap-2">
+                      <h4 className={`font-headline-md text-sm uppercase flex items-center gap-2 ${isFiveOfFive ? 'text-white' : 'text-on-surface'}`}>
                         {player.nickname}
-                        {isMe && <span className="bg-primary text-on-primary px-1.5 py-0.5 text-[9px] font-bold uppercase rounded-sm">YOU</span>}
+                        {isMe && <span className="bg-primary text-on-primary px-1.5 py-0.5 text-[9px] font-bold uppercase rounded-sm border border-on-surface">YOU</span>}
                       </h4>
-                      <span className="font-label-bold text-xs text-secondary">{getBadgeName(player, player.rank!)}</span>
+                      <span className={`font-label-bold text-xs uppercase ${isFiveOfFive ? 'text-green-100' : 'text-secondary'}`}>
+                        {isFiveOfFive ? '🏆 GRAND BINGO CHAMPION' : getBadgeName(player, player.rank!)}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right flex flex-col items-end">
-                    <span className="font-headline-md text-base block text-primary">{player.completedSquares}/{player.totalSquares}</span>
-                    <span className="font-label-bold text-[10px] text-secondary">{player.completedLines} Lines</span>
-                    <span className="font-label-bold text-[10px] text-secondary">{formatTime(player.completedAt)}</span>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <span className={`font-bold text-xs px-2 py-0.5 border-2 border-on-surface pop-shadow-sm ${
+                      isFiveOfFive ? 'bg-green-300 text-green-950 font-black animate-bounce' : 'bg-surface text-on-surface'
+                    }`}>
+                      {isFiveOfFive ? '🏆 5/5 BINGO!' : `${player.completedLines || 0}/5 LINES`}
+                    </span>
+                    <span className={`font-label-bold text-[10px] uppercase ${isFiveOfFive ? 'text-green-100' : 'text-secondary'}`}>
+                      {player.completedSquares || 0}/25 STAMPED
+                    </span>
                   </div>
                 </div>
               );

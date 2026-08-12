@@ -485,33 +485,39 @@ export default function BingoGridPage() {
             <div className="flex flex-col gap-3">
               <span className="font-label-bold text-xs uppercase text-on-surface font-bold">Proof (Selfie)</span>
 
-              {capturedPhotoUrl ? (
-                <div className="relative w-full h-48 border-4 border-on-surface pop-shadow overflow-hidden bg-black">
-                  <img src={capturedPhotoUrl} alt="Captured Selfie" className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => {
-                      setCapturedPhotoUrl(null);
-                      setCapturedBlob(null);
-                      setCameraStatus('idle');
-                    }}
-                    className="absolute top-2 right-2 bg-primary text-on-primary text-xs font-label-bold px-2 py-1 border border-on-surface uppercase cursor-pointer"
-                  >
-                    Retake
-                  </button>
-                </div>
-              ) : cameraStatus === 'active' ? (
-                <div className="relative w-full h-48 border-4 border-on-surface pop-shadow overflow-hidden bg-black">
-                  <video ref={videoRef} playsInline autoPlay className="w-full h-full object-cover transform scale-x-[-1]" />
-                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-4">
-                    <button onClick={handleToggleFacingMode} className="bg-surface p-2 border-2 border-on-surface rounded-full">
-                      <span className="material-symbols-outlined">flip_camera_ios</span>
+              {/* Keep video element in DOM unconditionally so videoRef is never null when starting camera */}
+              <div className={`relative w-full h-48 border-4 border-on-surface pop-shadow overflow-hidden bg-black ${capturedPhotoUrl || cameraStatus === 'active' ? 'block' : 'hidden'}`}>
+                {capturedPhotoUrl ? (
+                  <>
+                    <img src={capturedPhotoUrl} alt="Captured Selfie" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCapturedPhotoUrl(null);
+                        setCapturedBlob(null);
+                        setCameraStatus('idle');
+                      }}
+                      className="absolute top-2 right-2 bg-primary text-on-primary text-xs font-label-bold px-2 py-1 border border-on-surface uppercase cursor-pointer z-30"
+                    >
+                      Retake
                     </button>
-                    <button onClick={handleSnapPhoto} className="bg-primary text-on-primary px-4 py-2 border-2 border-on-surface font-label-bold uppercase">
-                      Snap Photo
-                    </button>
-                  </div>
-                </div>
-              ) : (
+                  </>
+                ) : (
+                  <>
+                    <video ref={videoRef} playsInline autoPlay muted className="w-full h-full object-cover transform scale-x-[-1]" />
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-4 z-30">
+                      <button type="button" onClick={handleToggleFacingMode} className="bg-surface p-2 border-2 border-on-surface rounded-full cursor-pointer">
+                        <span className="material-symbols-outlined">flip_camera_ios</span>
+                      </button>
+                      <button type="button" onClick={handleSnapPhoto} className="bg-primary text-on-primary px-4 py-2 border-2 border-on-surface font-label-bold uppercase cursor-pointer pop-shadow">
+                        Snap Photo 📸
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {!capturedPhotoUrl && cameraStatus !== 'active' && (
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
@@ -519,7 +525,7 @@ export default function BingoGridPage() {
                     className="w-full bg-primary text-on-primary border-4 border-on-surface p-4 font-headline-md text-headline-md uppercase pop-shadow hover:bg-primary-container cursor-pointer flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-2xl">photo_camera</span>
-                    <span>TAKE SELFIE</span>
+                    <span>{cameraStatus === 'requesting' ? 'OPENING CAMERA...' : 'TAKE SELFIE NOW'}</span>
                   </button>
                   <button
                     type="button"
@@ -530,7 +536,7 @@ export default function BingoGridPage() {
                     <span>Upload from gallery</span>
                   </button>
                   {cameraStatus === 'denied' && (
-                    <p className="text-red-500 font-label-bold text-xs text-center">Camera access denied. Please upload.</p>
+                    <p className="text-red-500 font-label-bold text-xs text-center">Camera permission denied. Use upload option above.</p>
                   )}
                 </div>
               )}
